@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Bingo Varela</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -48,40 +49,52 @@
     }
 
     .cell {
-        padding: 10px;
-        background: #333;
-        border-radius: 5px;
-    }
+    padding: 10px 0;
+    font-size: 4vw;
+    background: #333;
+    border-radius: 6px;
+}
 
+    /* Highlight drawn */
     .drawn {
         background: #4CAF50;
         font-weight: bold;
+    }
+
+    /* Sticky top info */
+    .top {
+        position: sticky;
+        top: 0;
+        background: #1e1e1e;
+        padding-bottom: 5px;
     }
 </style>
 </head>
 <body>
 
-<h2>Previous: <span id="previousNumber">-</span></h2>
-<h1 id="currentNumber">-</h1>
+<div class="top">
+    <h2>Previous: <span id="previousNumber">-</span></h2>
+    <h1 id="currentNumber">-</h1>
+</div>
 
 <div class="controls">
-    <button id="drawBtn" onclick="drawNumber()">Draw Number</button>
-    <button id="autoBtn" onclick="toggleAuto()">Start Auto</button>
-    <br>
+    <button id="drawBtn" onclick="drawNumber()">🎱 Draw Number</button>
+    <button id="autoBtn" onclick="toggleAuto()">▶️ Start Auto</button>
 
-    <label>Delay (seconds): </label>
-    <input type="range" id="delaySlider" min="1" max="10" value="3" oninput="updateDelayLabel()">
-    <span id="delayLabel">3</span>
+    <div>
+        <label>Delay: <span id="delayLabel">3</span>s</label><br>
+        <input type="range" id="delaySlider" min="1" max="10" value="3" oninput="updateDelayLabel()">
+    </div>
 
-    <br><br>
-
-    <label>Language: </label>
-    <select id="languageSelect">
-        <option value="en">English</option>
-        <option value="es">Español</option>
-        <option value="custom">🇦🇷 Tomas</option>
-        <option value="mickey">Mickey</option>
-    </select>
+    <div>
+        <label>Voice:</label><br>
+        <select id="voiceSelect" style="font-size:16px; padding:10px; width:80%;">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="custom">🇦🇷 Mi voz</option>
+            <option value="mickey">Mickey</option>
+        </select>
+    </div>
 </div>
 
 <div id="grid"></div>
@@ -95,6 +108,18 @@ let previousNumber = null;
 
 let autoMode = false;
 let intervalId = null;
+
+let audioUnlocked = false;
+
+function unlockAudio() {
+    if (audioUnlocked) return;
+
+    const silent = new Audio();
+    silent.play().catch(() => {});
+    audioUnlocked = true;
+}
+
+document.addEventListener("click", unlockAudio);
 
 // Create grid
 const grid = document.getElementById("grid");
