@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bingo Varela</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #1e1e1e;
+        color: white;
+    }
+
+    h1 {
+        font-size: 70px;
+        margin: 10px;
+    }
+
+    h2 {
+        margin: 5px;
+        color: #aaa;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 18px;
+        margin: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    #drawBtn { background: #4CAF50; color: white; }
+    #autoBtn { background: #2196F3; color: white; }
+
+    .controls {
+        margin-top: 20px;
+    }
+
+    #grid {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 5px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .cell {
+        padding: 10px;
+        background: #333;
+        border-radius: 5px;
+    }
+
+    .drawn {
+        background: #4CAF50;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<h2>Previous: <span id="previousNumber">-</span></h2>
+<h1 id="currentNumber">-</h1>
+
+<div class="controls">
+    <button id="drawBtn" onclick="drawNumber()">Draw Number</button>
+    <button id="autoBtn" onclick="toggleAuto()">Start Auto</button>
+    <br>
+
+    <label>Delay (seconds): </label>
+    <input type="range" id="delaySlider" min="1" max="10" value="3" oninput="updateDelayLabel()">
+    <span id="delayLabel">3</span>
+
+    <br><br>
+
+    <label>Language: </label>
+    <select id="languageSelect">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="custom">🇦🇷 Tomas</option>
+        <option value="mickey">Mickey</option>
+    </select>
+</div>
+
+<div id="grid"></div>
+
+<script>
+let remainingNumbers = Array.from({ length: 90 }, (_, i) => i + 1);
+let drawnNumbers = [];
+
+let currentNumber = null;
+let previousNumber = null;
+
+let autoMode = false;
+let intervalId = null;
+
+// Create grid
+const grid = document.getElementById("grid");
+for (let i = 1; i <= 90; i++) {
+    const div = document.createElement("div");
+    div.className = "cell";
+    div.id = "num-" + i;
+    div.innerText = i;
+    grid.appendChild(div);
+}
+
+function drawNumber() {
+    if (remainingNumbers.length === 0) {
+        alert("All numbers drawn!");
+        stopAuto();
+        return;
+    }
+
+    const index = Math.floor(Math.random() * remainingNumbers.length);
+    const number = remainingNumbers.splice(index, 1)[0];
+
+    previousNumber = currentNumber;
+    currentNumber = number;
+
+    drawnNumbers.push(number);
+
+    updateUI();
+    speakNumber(number);
+}
+
+function updateUI() {
+    document.getElementById("currentNumber").innerText = currentNumber ?? "-";
+    document.getElementById("previousNumber").innerText = previousNumber ?? "-";
+
+    if (currentNumber) {
+        document.getElementById("num-" + currentNumber).classList.add("drawn");
+    }
+}
+
+// Bingo-style call
+function getBingoCall(number, lang) {
+    if (lang === "es") {
+        return `${number}`;
+    }
+
+    // Simple English bingo flair
+    if (number === 90) return "Top of the shop, 90!";
+    if (number === 1) return "Kelly's eye, number 1!";
+    return `Number ${number}`;
+}
+
+function speakNumber(number) {
+    const lang = document.getElementById("languageSelect").value;
+    const msg = new SpeechSynthesisUtterance(getBingoCall(number, lang));
+
+    if(lang == "custom"){
+        const audio = new Audio(`Audios/${number}.mp3`)
+        audio.play();
+        return;
+    }
+
+    if(lang == "mickey"){
+        const audio = new Audio(`AudioMickey/${number}.mp3`)
+        audio.play();
+        return;
+    }
+
+    msg.lang = (lang === "es") ? "es-ES" : "en-US";
+
+    // Try to pick a matching voice
+    const voices = speechSynthesis.getVoices();
+    const voice = voices.find(v => v.lang.startsWith(msg.lang));
+    if (voice) msg.voice = voice;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(msg);
+}
+
+function toggleAuto() {
+    autoMode = !autoMode;
+
+    if (autoMode) {
+        startAuto();
+        document.getElementById("autoBtn").innerText = "Stop Auto";
+    } else {
+        stopAuto();
+    }
+}
+
+function startAuto() {
+    const delay = getDelay();
+    intervalId = setInterval(drawNumber, delay);
+}
+
+function stopAuto() {
+    clearInterval(intervalId);
+    intervalId = null;
+    autoMode = false;
+    document.getElementById("autoBtn").innerText = "Start Auto";
+}
+
+function getDelay() {
+    return document.getElementById("delaySlider").value * 1000;
+}
+
+function updateDelayLabel() {
+    const value = document.getElementById("delaySlider").value;
+    document.getElementById("delayLabel").innerText = value;
+
+    if (autoMode) {
+        stopAuto();
+        startAuto();
+    }
+}
+</script>
+
+</body>
+</html>
