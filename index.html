@@ -172,7 +172,7 @@ function getBingoCall(number, lang) {
 }
 
 function speakNumber(number) {
-    const lang = document.getElementById("languageSelect").value;
+    const lang = document.getElementById("voiceSelect").value;
     const msg = new SpeechSynthesisUtterance(getBingoCall(number, lang));
 
     if(lang == "custom"){
